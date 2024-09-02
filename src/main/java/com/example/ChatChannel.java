@@ -28,6 +28,15 @@ public class ChatChannel {
             return formattedName;
         }
     }
+    
+    public static Channel getChannelById(String id) {
+        return switch (id) {
+            case "all" -> All;
+            case "party" -> Party;
+            case "guild" -> Guild;
+            default -> null;
+        };
+    }
 
     public static class All extends Channel {
         public All() {

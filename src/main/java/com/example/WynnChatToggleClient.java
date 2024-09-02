@@ -1,7 +1,9 @@
 package com.example;
 
+import com.google.gson.JsonObject;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 
 import net.fabricmc.fabric.api.client.message.v1.ClientSendMessageEvents;
@@ -12,6 +14,7 @@ import com.example.command.aCommand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.Objects;
 
 public class WynnChatToggleClient implements ClientModInitializer {
@@ -21,14 +24,34 @@ public class WynnChatToggleClient implements ClientModInitializer {
     public static ChatChannel.Channel currentChannel = ChatChannel.All;
     public static ChatChannel.Channel channelOverride = null;
 
+    public static File configLocation = new File(FabricLoader.getInstance().getConfigDir().toFile(), MOD_ID);
+    public static JsonObject overrideConfig;
+
     @Override
     public void onInitializeClient() {
+        LOGGER.info("path to config {}", configLocation.getAbsolutePath());
+        // Create the config directory if it doesn't exist
+        if (!WynnChatToggleClient.configLocation.exists()) {
+            assert WynnChatToggleClient.configLocation.mkdirs();
+        }
+
+        ConfigDownload configDownload = new ConfigDownload();
+
+        // Download the config file
+        File configFile = configDownload.download();
+        if (configFile == null) {
+            LOGGER.warn("Failed to download overrideConfig.json");
+        }
+
+        overrideConfig = LoadConfig.loadConfig(configFile);
+
         registerCommands();
 
         registerChatEventListener();
 
         InputOverrides inputOverrides = new InputOverrides();
         inputOverrides.registerChatMessageListener();
+
         LOGGER.info("WynnChatToggle Client Initialized");
     }
 

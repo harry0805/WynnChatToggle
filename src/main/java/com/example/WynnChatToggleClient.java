@@ -24,12 +24,17 @@ public class WynnChatToggleClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         registerCommands();
+
         registerChatEventListener();
+
+        InputOverrides inputOverrides = new InputOverrides();
+        inputOverrides.registerChatMessageListener();
+        LOGGER.info("WynnChatToggle Client Initialized");
     }
 
     private void registerCommands() {
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
-//            new exampleCommand().register(dispatcher);
+            //  new exampleCommand().register(dispatcher);
             new chatCommand().register(dispatcher);
             new aCommand().register(dispatcher);
         });

@@ -1,7 +1,5 @@
 package com.example;
 
-import net.fabricmc.loader.api.FabricLoader;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;

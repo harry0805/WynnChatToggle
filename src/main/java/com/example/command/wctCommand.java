@@ -1,12 +1,12 @@
 package com.example.command;
 
+import com.example.WynnChatToggleClient;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
-
 import net.minecraft.util.Formatting;
 
 import java.util.concurrent.CompletableFuture;
@@ -14,14 +14,16 @@ import java.util.concurrent.CompletableFuture;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 
-import com.example.WynnChatToggleClient;
+public class wctCommand {
+    WynnChatToggleClient thisMod;
 
-import com.example.ChatChannel;
+    public wctCommand(WynnChatToggleClient thisMod) {
+        this.thisMod = thisMod;
+    }
 
-public class chatCommand {
     public void register(CommandDispatcher<FabricClientCommandSource> dispatcher) {
-        dispatcher.register(literal("chat")
-                .then(argument("ChatType", StringArgumentType.string())
+        dispatcher.register(literal("wct")
+                .then(argument("action", StringArgumentType.string())
                         .suggests(this::suggestCommands)
                         .executes(this::commandExecute)
                 )
@@ -29,28 +31,19 @@ public class chatCommand {
     }
 
     private int commandExecute(CommandContext<FabricClientCommandSource> context) {
-        String chatType = context.getArgument("ChatType", String.class).toLowerCase();
-        ChatChannel.Channel resolvedChatType = switch (chatType) {
-            case "a", "all" -> ChatChannel.All;
-            case "p", "party" -> ChatChannel.Party;
-            case "g", "guild" -> ChatChannel.Guild;
-            default -> null;
-        };
-
-        if (resolvedChatType == null) {
-            WynnChatToggleClient.printChat("Unknown channel type!", Formatting.RED);
-            return 0;
+        String action = context.getArgument("action", String.class).toLowerCase();
+        if (action.equals("reload")) {
+            WynnChatToggleClient.printChat("WynnChatToggle is reloading...", Formatting.YELLOW);
+            thisMod.reload();
+            WynnChatToggleClient.printChat("Reloaded Successfully!", Formatting.GREEN);
+            return 1;
         }
 
-        WynnChatToggleClient.setChatChannel(resolvedChatType);
-
-        WynnChatToggleClient.printChat(String.format("You are now in the %s channel", resolvedChatType.getFormattedName()), Formatting.GREEN);
-        return 1;
+        WynnChatToggleClient.printChat("Unknown action!", Formatting.RED);
+        return 0;
     }
     private CompletableFuture<Suggestions> suggestCommands(CommandContext<FabricClientCommandSource> context, SuggestionsBuilder builder) {
-        builder.suggest("all");
-        builder.suggest("party");
-        builder.suggest("guild");
+        builder.suggest("reload");
         return builder.buildFuture();
     }
 }

@@ -11,16 +11,16 @@ import java.util.Map;
 
 public class InputOverrides {
 
-    private final Map<Pattern, String> regexActions;
+    private Map<Pattern, String> regexActions;
 
     private static final Pattern FORMATTING_CODE_PATTERN = Pattern.compile("(?i)§[0-9A-FK-OR]");
     
     public InputOverrides() {
-        // Use this jsonObject WynnChatToggleClient.overrideConfig to create the same HashMap as down below here:
+        loadHashMap();
+    }
 
-
-        this.regexActions = new HashMap<>();
-
+    public void loadHashMap() {
+        regexActions = new HashMap<>();
         // Convert the JsonObject into a HashMap<Pattern, String>
         for (Map.Entry<String, JsonElement> entry : WynnChatToggleClient.overrideConfig.entrySet()) {
             // Compile the regex pattern from the JSON key
@@ -32,7 +32,6 @@ public class InputOverrides {
             // Put the pattern and value into the map
             regexActions.put(pattern, value);
         }
-
     }
 
     public void registerChatMessageListener() {
@@ -50,6 +49,7 @@ public class InputOverrides {
             Matcher matcher = entry.getKey().matcher(textMessage);
             if (matcher.find()) {
                 // If the message matches, set the override channel to its value
+                WynnChatToggleClient.LOGGER.info("Matched message: {}", message.getString());
                 ChatChannel.Channel channel = null;
                 if (entry.getValue() != null) {
                     channel = ChatChannel.getChannelById(entry.getValue());

@@ -10,7 +10,10 @@ import net.fabricmc.fabric.api.client.message.v1.ClientSendMessageEvents;
 
 import com.example.command.chatCommand;
 import com.example.command.aCommand;
+import com.example.command.wctCommand;
 
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,9 +29,31 @@ public class WynnChatToggleClient implements ClientModInitializer {
 
     public static File configLocation = new File(FabricLoader.getInstance().getConfigDir().toFile(), MOD_ID);
     public static JsonObject overrideConfig;
+    private static InputOverrides inputOverrides;
 
     @Override
     public void onInitializeClient() {
+        LOGGER.info("Starting WynnChatToggle Client Initialization...");
+        loadConfigs();
+        registerCommands();
+        registerSendMessageListener();
+
+
+        inputOverrides = new InputOverrides();
+        inputOverrides.registerChatMessageListener();
+
+        LOGGER.info("WynnChatToggle Client Initialized");
+    }
+
+    public void reload() {
+        LOGGER.info("Starting WynnChatToggle Reload...");
+        loadConfigs();
+
+        inputOverrides.loadHashMap();
+        LOGGER.info("WynnChatToggle Reloaded!");
+    }
+
+    private static void loadConfigs() {
         LOGGER.info("path to config {}", configLocation.getAbsolutePath());
         // Create the config directory if it doesn't exist
         if (!WynnChatToggleClient.configLocation.exists()) {
@@ -42,17 +67,7 @@ public class WynnChatToggleClient implements ClientModInitializer {
         if (configFile == null) {
             LOGGER.warn("Failed to download overrideConfig.json");
         }
-
         overrideConfig = LoadConfig.loadConfig(configFile);
-
-        registerCommands();
-
-        registerChatEventListener();
-
-        InputOverrides inputOverrides = new InputOverrides();
-        inputOverrides.registerChatMessageListener();
-
-        LOGGER.info("WynnChatToggle Client Initialized");
     }
 
     private void registerCommands() {
@@ -60,6 +75,8 @@ public class WynnChatToggleClient implements ClientModInitializer {
             //  new exampleCommand().register(dispatcher);
             new chatCommand().register(dispatcher);
             new aCommand().register(dispatcher);
+            wctCommand wct = new wctCommand(this);
+            wct.register(dispatcher);
         });
     }
 
@@ -67,29 +84,39 @@ public class WynnChatToggleClient implements ClientModInitializer {
         currentChannel = channel;
     }
 
-    private void registerChatEventListener() {
-        ClientSendMessageEvents.ALLOW_CHAT.register((message) -> {
-            ChatChannel.Channel messageChannel;
-            // Check if ChannelOverride is on
-            if (channelOverride != null) {
-                messageChannel = channelOverride;
-                channelOverride = null;
-            } else {
-                messageChannel = currentChannel;
-            }
+    private boolean sendMessageInChannel(String message) {
+        ChatChannel.Channel messageChannel;
+        // Check if ChannelOverride is on
+        if (channelOverride != null) {
+            messageChannel = channelOverride;
+            channelOverride = null;
+        } else {
+            messageChannel = currentChannel;
+        }
 
-            if (!Objects.equals(messageChannel.id, "all")) {
-                sendCommandMessage(message, messageChannel.command);
-                // Return false to cancel the chat message from being sent
-                return false;
-            }
-            // Otherwise, allow the message to be sent
-            return true;
-        });
+        if (!Objects.equals(messageChannel.id, "all")) {
+            sendCommandMessage(message, messageChannel.command);
+            // Return false to cancel the chat message from being sent
+            return false;
+        }
+        // Otherwise, allow the message to be sent
+        return true;
+    }
+
+    private void registerSendMessageListener() {
+        ClientSendMessageEvents.ALLOW_CHAT.register(this::sendMessageInChannel);
     }
 
     private static void sendCommandMessage(String message, String command) {
         String commandMessage = command + " " + message;
         Objects.requireNonNull(MinecraftClient.getInstance().getNetworkHandler()).sendChatCommand(commandMessage);
+    }
+
+    public static void printChat(String message, Formatting format) {
+        MinecraftClient client = MinecraftClient.getInstance();
+
+        if (client.player != null) {  // Check if the player exists (i.e., the client is in a game)
+            client.player.sendMessage(Text.literal(message).formatted(format), false);
+        }
     }
 }

@@ -49,7 +49,7 @@ public class InputOverrides {
             Matcher matcher = entry.getKey().matcher(textMessage);
             if (matcher.find()) {
                 // If the message matches, set the override channel to its value
-                WynnChatToggleClient.LOGGER.info("Matched message: {}", message.getString());
+//                WynnChatToggleClient.LOGGER.info("Matched message: {}", message.getString());
                 ChatChannel.Channel channel = null;
                 if (entry.getValue() != null) {
                     channel = ChatChannel.getChannelById(entry.getValue());

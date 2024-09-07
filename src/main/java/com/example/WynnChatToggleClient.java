@@ -18,7 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.lang.reflect.Array;
 import java.util.Objects;
 
 public class WynnChatToggleClient implements ClientModInitializer {
@@ -41,8 +40,6 @@ public class WynnChatToggleClient implements ClientModInitializer {
         loadConfigs();
         registerCommands();
         registerSendMessageListener();
-
-        registerSendCommandListener();
 
         inputOverrides = new InputOverrides();
         inputOverrides.registerChatMessageListener();
@@ -116,13 +113,6 @@ public class WynnChatToggleClient implements ClientModInitializer {
 
     private void registerSendMessageListener() {
         ClientSendMessageEvents.ALLOW_CHAT.register(this::sendMessageInChannel);
-    }
-
-    private void registerSendCommandListener() {
-        ClientSendMessageEvents.COMMAND.register((command) -> {
-            LOGGER.info("User ran command: {}", command);
-        });
-
     }
 
     private static void sendCommandMessage(String message, String command) {

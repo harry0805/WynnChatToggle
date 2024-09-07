@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.lang.reflect.Array;
 import java.util.Objects;
 
 public class WynnChatToggleClient implements ClientModInitializer {
@@ -26,6 +27,9 @@ public class WynnChatToggleClient implements ClientModInitializer {
 
     public static ChatChannel.Channel currentChannel = ChatChannel.All;
     public static ChatChannel.Channel channelOverride = null;
+    public static ChatChannel.Channel lastOverrideChannel;
+    public static long lastOverrideTime;
+    public static int chainOverrideInterval = 100;
 
     public static File configLocation = new File(FabricLoader.getInstance().getConfigDir().toFile(), MOD_ID);
     public static JsonObject overrideConfig;
@@ -38,6 +42,7 @@ public class WynnChatToggleClient implements ClientModInitializer {
         registerCommands();
         registerSendMessageListener();
 
+        registerSendCommandListener();
 
         inputOverrides = new InputOverrides();
         inputOverrides.registerChatMessageListener();
@@ -57,7 +62,8 @@ public class WynnChatToggleClient implements ClientModInitializer {
         LOGGER.info("path to config {}", configLocation.getAbsolutePath());
         // Create the config directory if it doesn't exist
         if (!WynnChatToggleClient.configLocation.exists()) {
-            assert WynnChatToggleClient.configLocation.mkdirs();
+            boolean created = WynnChatToggleClient.configLocation.mkdirs();
+             assert created;
         }
 
         ConfigDownload configDownload = new ConfigDownload();
@@ -90,6 +96,11 @@ public class WynnChatToggleClient implements ClientModInitializer {
         if (channelOverride != null) {
             messageChannel = channelOverride;
             channelOverride = null;
+
+            lastOverrideChannel = messageChannel;
+            lastOverrideTime = System.currentTimeMillis();
+        } else if (lastOverrideTime + chainOverrideInterval > System.currentTimeMillis()) {
+            messageChannel = lastOverrideChannel;
         } else {
             messageChannel = currentChannel;
         }
@@ -105,6 +116,13 @@ public class WynnChatToggleClient implements ClientModInitializer {
 
     private void registerSendMessageListener() {
         ClientSendMessageEvents.ALLOW_CHAT.register(this::sendMessageInChannel);
+    }
+
+    private void registerSendCommandListener() {
+        ClientSendMessageEvents.COMMAND.register((command) -> {
+            LOGGER.info("User ran command: {}", command);
+        });
+
     }
 
     private static void sendCommandMessage(String message, String command) {

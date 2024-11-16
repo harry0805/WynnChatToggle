@@ -1,6 +1,6 @@
 {
   "(?s).+ Type the item name or type 'cancel' to.+cancel:.+": "all",
-  "(?s).+ Type the price in emeralds or type .+ 'cancel' to cancel:.+": "all",
+  "(?s).+ Type the price in emeralds or formatted .+ \\(e\\.g '10eb', '10stx 5eb'\\) or type .+ 'cancel' to cancel:.+": "all",
   "Party Finder: Type in chat the description you want to use for your party \\(max 140 characters or cancel\\):": "all",
   ".+ You moved and your chat input was canceled\\.": null
 }
